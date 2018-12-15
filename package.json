@@ -1,7 +1,7 @@
 {
   "name": "upflix_node_angular",
   "version": "1.0.0",
-  "description": "Esta es una prueba de como hacer netflix con angular y node",
+  "description": "This is a node and angular test for upflix",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
