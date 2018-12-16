@@ -1,12 +1,7 @@
 const mongoose = require('mongoose');
-/*let UpFlixDB = {};*/
-// Aplicamos el patrón de diseño singleton
+
 class UpFlixDBConn {
-    /*const db = null;
-    movieSchema = null;
-    movieCollection = null;
-    seriesSchema = null;
-    seriesCollection = null;*/
+
     constructor(){
         /*if (RestDB){
             return RestDB;
@@ -53,66 +48,47 @@ class UpFlixDBConn {
         /*RestDB = this;*/
     }
 
-    /*addRestaurant(title, description, img_path, year) {
-        let movieSchema = new mongoose.Schema({
-            title: String,
-            description:String,
-            img_path:String,
-            year:Number});
-
-        let restaurantes = mongoose.model('Importada', movieSchema, 'Importada');
-
-        let movie = new restaurantes({
-            title: title,
-            description:description,
-            img_path: img_path,
-            year: year
-        });
-
-        movie.save((err, movie)=>{
-            if (err){
-                console.log('Error en la insercion en mongo');
-            }
-            console.log(movie);
-        })
-    }*/
-
-    getMovies(limit=20){
-        return this.movieCollection.find().limit(limit).exec();
+    searchMovies(query){
+        return this.movieCollection.find({title: new RegExp(query)}).exec();
     }
 
-    getPopularMovies(limit=20){
-        return this.movieCollection.find().sort({popularity:1}).limit(limit).exec();
+    searchSeries(query){
+        return this.seriesCollection.find({title: new RegExp(query)}).exec();
+    }
+
+    discoverMovies(genre = '', original_language = '', page = 1){
+        if (genre===''&&original_language===''){
+            return this.movieCollection.find().skip(20*(page-1)).limit(20*page).exec();
+        }
+        if (genre==='') {
+            return this.movieCollection.find({original_language:original_language}).skip(20*(page-1)).limit(20*page).exec();
+        }
+        if (original_language===''){
+            return this.movieCollection.find({genre:genre}).skip(20*(page-1)).limit(20*page).exec();
+        }
+        return this.movieCollection.find({genre:genre,original_language:original_language}).skip(20*(page-1)).limit(20*page).exec();
+    }
+
+    discoverSeries(genre = '', original_language = '', page = 1){
+        if (genre===''&&original_language===''){
+            return this.seriesCollection.find().skip(20*(page-1)).limit(20*page).exec();
+        }
+        if (genre==='') {
+            return this.seriesCollection.find({original_language:original_language}).skip(20*(page-1)).limit(20*page).exec();
+        }
+        if (original_language===''){
+            return this.seriesCollection.find({genre:genre}).skip(20*(page-1)).limit(20*page).exec();
+        }
+        return this.seriesCollection.find({genre:genre,original_language:original_language}).skip(20*(page-1)).limit(20*page).exec();
+    }
+
+    getPopularSeries(page = 1){
+        return this.seriesCollection.find().sort({popularity:1}).skip(20*(page-1)).limit(20*page).exec();
     };
 
-    /*getSerieImgPath(id, type){
-        id = parseInt(id);
-        if (type==='backdrop_path'){
-            return this.seriesCollection.find({id:id},{backdrop_path:1}).limit(limit).exec();
-        }
-        if (type==='poster_path'){
-            return this.seriesCollection.find({id:id},{poster_path:1}).limit(limit).exec();
-        }
-        else{
-            console.log('Mala elección de tipo de imagen');
-        }
-    }*/
-
-    getSeries(limit=20){
-        return this.seriesCollection.find().limit(limit).exec();
-    }
-
-    getPopularSeries(limit=20){
-        return this.seriesCollection.find().sort({popularity:1}).limit(limit).exec();
+    getPopularMovies(page = 1){
+        return this.movieCollection.find().sort({popularity:1}).skip(20*(page-1)).limit(20*page).exec();
     };
-
-    getJapMovies(limit=20){
-        return this.movieCollection.find({original_language:'ja'}).limit(limit).exec();
-    }
-
-    getJapSeries(limit=20){
-        return this.seriesCollection.find({original_language:'ja'}).limit(limit).exec();
-    }
 }
 
 module.exports = UpFlixDBConn;
