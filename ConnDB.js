@@ -45,15 +45,6 @@ class UpFlixDBConn {
         });
         this.seriesCollection = mongoose.model('series', this.seriesSchema);
 
-        this.userSchema = new mongoose.Schema({
-            name: String,
-            mail: String,
-            password: String,
-            permission: Array
-        });
-        this.usersCollection = mongoose.model('users', this.userSchema);
-
-        this.permissions = [['ROLE_ADMIN', 'ROLE_USER'], ['ROLE_USER']]
     }
 
     capitalizeFirstLetter(string) {
