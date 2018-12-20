@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
-
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+const myPlaintextPassword = 's0/\/\P4$$w0rD';
+const someOtherPlaintextPassword = 'not_bacon';
 class UpFlixDBConn {
-
     constructor(){
-        /*if (RestDB){
-            return RestDB;
-        }*/
         mongoose.connect('mongodb://localhost/Videoclub', {userUrlParser: true})
             .catch((e)=>console.log(e));
         this.db = mongoose.connection;
@@ -45,50 +44,197 @@ class UpFlixDBConn {
             first_air_date:String
         });
         this.seriesCollection = mongoose.model('series', this.seriesSchema);
-        /*RestDB = this;*/
+
+        this.userSchema = new mongoose.Schema({
+            name: String,
+            mail: String,
+            password: String,
+            permission: Array
+        });
+        this.usersCollection = mongoose.model('users', this.userSchema);
+
+        this.permissions = [['ROLE_ADMIN', 'ROLE_USER'], ['ROLE_USER']]
     }
 
-    searchMovies(query){
-        return this.movieCollection.find({title: new RegExp(query)}).exec();
+    capitalizeFirstLetter(string) {
+        return string[0].toUpperCase() + string.slice(1);
     }
 
-    searchSeries(query){
-        return this.seriesCollection.find({title: new RegExp(query)}).exec();
+    async searchMovies(query){
+        let results = {};
+        await this.movieCollection
+            .find({$or:[{title: new RegExp(query)},
+                    {title: new RegExp(this.capitalizeFirstLetter(query))},
+                    {overview: new RegExp(query)},
+                    {overview: new RegExp(this.capitalizeFirstLetter(query))}]}).sort({popularity:-1}).exec()
+            .then(data=> results = {results:data});
+        return results;
     }
 
-    discoverMovies(genre = '', original_language = '', page = 1){
+    async searchSeries(query){
+        let results = {};
+        await this.seriesCollection
+            .find({$or:[{name: new RegExp(query)},
+                    {name: new RegExp(this.capitalizeFirstLetter(query))},
+                    {overview: new RegExp(query)},
+                    {overview: new RegExp(this.capitalizeFirstLetter(query))}]}).sort({popularity:-1}).exec()
+            .then(data=> results = {results:data});
+        return results;
+    }
+
+    async search(query){
+        let data = [];
+        let data1 = await this.searchSeries(query);
+        let data2 = await this.searchMovies(query);
+        console.log(query);
+        console.log(data1);
+        console.log(data2);
+        for (let elem in data1.results){
+            data.push(data1.results[elem]);
+            data.push(data2.results[elem]);
+        }
+        return {results:data};
+    }
+
+    async discoverMovies(genre = '', original_language = '', page = 1){
+        let results = {};
         if (genre===''&&original_language===''){
-            return this.movieCollection.find().skip(20*(page-1)).limit(20*page).exec();
+            await this.movieCollection
+            .find().skip(20*(page-1)).limit(20*page).exec()
+            .then(data=> results = {page:page, results:data});
+            return results;
         }
         if (genre==='') {
-            return this.movieCollection.find({original_language:original_language}).skip(20*(page-1)).limit(20*page).exec();
+            await this.movieCollection
+                .find({original_language:original_language}).skip(20*(page-1))
+                .limit(20*page).exec()
+                .then(data=> results = {page:page, results:data});
+            return results;
         }
         if (original_language===''){
-            return this.movieCollection.find({genre:genre}).skip(20*(page-1)).limit(20*page).exec();
+            await this.movieCollection
+                .find({genre:genre}).skip(20*(page-1))
+                .limit(20*page).exec()
+                .then(data=> results = {page:page, results:data});
+            return results;
         }
-        return this.movieCollection.find({genre:genre,original_language:original_language}).skip(20*(page-1)).limit(20*page).exec();
+        await this.movieCollection
+            .find({genre:genre,original_language:original_language}).skip(20*(page-1))
+            .limit(20*page).exec()
+            .then(data=> results = {page:page, results:data});
+        return results;
     }
 
-    discoverSeries(genre = '', original_language = '', page = 1){
+    async discoverSeries(genre = '', original_language = '', page = 1){
+        let results = {};
         if (genre===''&&original_language===''){
-            return this.seriesCollection.find().skip(20*(page-1)).limit(20*page).exec();
+            await this.seriesCollection
+                .find().skip(20*(page-1)).limit(20*page).exec()
+                .then(data=> results = {page:page, results:data});
+            return results;
         }
         if (genre==='') {
-            return this.seriesCollection.find({original_language:original_language}).skip(20*(page-1)).limit(20*page).exec();
+            await this.seriesCollection
+                .find({original_language:original_language}).skip(20*(page-1)).limit(20*page).exec()
+                .then(data=> results = {page:page, results:data});
+            return results;
         }
         if (original_language===''){
-            return this.seriesCollection.find({genre:genre}).skip(20*(page-1)).limit(20*page).exec();
+            await this.seriesCollection
+                .find({genre:genre}).skip(20*(page-1)).limit(20*page).exec()
+                .then(data=> results = {page:page, results:data});
+            return results;
         }
-        return this.seriesCollection.find({genre:genre,original_language:original_language}).skip(20*(page-1)).limit(20*page).exec();
+        await this.seriesCollection
+            .find({genre:genre,original_language:original_language}).skip(20*(page-1)).limit(20*page).exec()
+            .then(data=> results = {page:page, results:data});
+        return results;
     }
 
-    getPopularSeries(page = 1){
-        return this.seriesCollection.find().sort({popularity:1}).skip(20*(page-1)).limit(20*page).exec();
+    async getPopularSeries(page = 1){
+        let results = {};
+        await this.seriesCollection
+            .find().sort({popularity:-1}).skip(20*(page-1)).limit(20*page).exec()
+            .then(data=> results = {page:page, results:data});
+
+        return results;
     };
 
-    getPopularMovies(page = 1){
-        return this.movieCollection.find().sort({popularity:1}).skip(20*(page-1)).limit(20*page).exec();
+    async getPopularMovies(page = 1){
+        let results = {};
+        await this.movieCollection
+            .find().sort({popularity:-1}).skip(20*(page-1)).limit(20*page).exec()
+            .then(data=> results = {page:page, results:data});
+        return results;
     };
+
+    async addUsersFixtures(i) {
+        if (i<10){
+            let encryptedPwd = await bcrypt.hash('123', saltRounds);
+            let user = new this.usersCollection({
+                name: 'nombre' + i,
+                password: encryptedPwd,
+                mail: 'user' + i + '@mail.com',
+                permission: this.permissions[i%2]
+            });
+
+            user.save((err, data)=>{
+                if (err){
+                    console.log('Error en la insercion del usuario');
+                }
+                this.addUsersFixtures(i+1);
+            });
+        }
+
+    }
+
+    async addUser(name, mail, password, permission = this.permissions[1]) {
+        let encryptedPwd = await bcrypt.hash(password, saltRounds);
+        let user = await new this.usersCollection({
+            name: name,
+            password: encryptedPwd,
+            mail: mail,
+            permission: permission
+        });
+
+        await user.save((err, data)=>{
+            if (err){
+                console.log('Error en la insercion del usuario');
+            }
+        });
+    }
+
+    async editUser(id, name, oldPassword, newPassword, mail, permission) {
+        let OldUser = {};
+        await this.usersCollection.findOne({_id:id}).exec().then(data=> OldUser = data);
+        // Tratamiento de contraseñas
+        let encryptedNewPwd = await bcrypt.hash(newPassword, saltRounds);
+        let validUser = await bcrypt.compare(oldPassword, OldUser.password);
+        // Tratamiento de permisos
+        if (permission==='ROLE_USER'){
+            permission = ['ROLE_USER'];
+        } else {
+            permission = ['ROLE_ADMIN', 'ROLE_USER'];
+        }
+        // Si la contraseña es correcta, se procede a la actualizacion. Si no, se devuelve un error.
+        if (validUser){
+            let user = new this.usersCollection({
+                name: name,
+                password: encryptedNewPwd,
+                mail: mail,
+                permission: permission
+            });
+
+            user.save((err, data)=>{
+                if (err){
+                    console.log('Error en la insercion del usuario');
+                }
+            });
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
 
 module.exports = UpFlixDBConn;
