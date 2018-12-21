@@ -3,17 +3,17 @@ const clean = require('gulp-clean');
 
 gulp.task('copy', ()=>{
     console.log('Moviendo el compilado de netflix');
-    return gulp.src('../Up-Flix/dist/Up-Flix**/*')
+    return gulp.src('../Up-Flix/dist/Up-Flix/**/*')
         .pipe(gulp.dest('./Public/dist'));
 });
 gulp.task('clean', ()=>{
     console.log('Borrando el compilado anterior de netflix');
-    return gulp.src('./Public/dist/**/*')
+    return gulp.src('./Public/*')
         .pipe(clean());
 });
 gulp.task('default', ()=>{
     console.log('watching: ../Up-Flix/dist');
-    gulp.watch('../Up-Flix/dist', gulp.series('clean', 'copy', 'deleteSource'))
+    gulp.watch('../Up-Flix/dist', gulp.series('clean', 'copy'))
 });
 
 

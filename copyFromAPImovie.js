@@ -22,7 +22,7 @@ let movieSchema = new mongoose.Schema({
     trailerKey: String
 });
 let movies = mongoose.model('peliculas', movieSchema);
-let page = 681;
+let page = 1;
 function requestToAPI(){
     request({
         url: `https://api.themoviedb.org/3/discover/movie?api_key=8d1ff0fd31d021c4902d57908c87f3fc&page=${page}`,

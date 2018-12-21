@@ -22,7 +22,7 @@ let seriesSchema = new mongoose.Schema({
     trailerKey: String
 });
 let series = mongoose.model('series', seriesSchema);
-let page = 637;
+let page = 1;
 function requestToAPI(){
     request({
         url: `https://api.themoviedb.org/3/discover/tv?api_key=8d1ff0fd31d021c4902d57908c87f3fc&page=${page}`,
